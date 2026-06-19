@@ -2,6 +2,8 @@
 
 An interactive, scroll-driven guide to the NVIDIA H100 and Hopper GPU architecture.
 
+[View the live site](https://h100dissected.vercel.app/)
+
 H100 Dissected connects the physical GPU package and compute hierarchy to the CUDA,
 Triton, and PyTorch concepts developers use in code. The visualization moves from
 the H100 package into the GH100 die, GPCs, TPCs, SMs, execution resources, and

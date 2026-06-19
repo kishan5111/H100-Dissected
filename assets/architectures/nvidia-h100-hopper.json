@@ -1,0 +1,125 @@
+{
+  "id": "nvidia-h100-gh100-hopper",
+  "name": "NVIDIA H100 Tensor Core GPU",
+  "vendor": "NVIDIA",
+  "architecture": "Hopper",
+  "gpuCodename": "GH100",
+  "releaseContext": "Data-center GPU architecture for AI training, inference, and HPC workloads.",
+  "sources": [
+    {
+      "id": "nvidia-h100-whitepaper",
+      "title": "NVIDIA H100 Tensor Core GPU Architecture Whitepaper",
+      "publisher": "NVIDIA",
+      "url": "https://resources.nvidia.com/en-us-tensor-core/nvidia-tensor-core-gpu-datasheet",
+      "accessed": "2026-06-09"
+    },
+    {
+      "id": "nvidia-hopper-blog",
+      "title": "NVIDIA Hopper Architecture In-Depth",
+      "publisher": "NVIDIA Developer Blog",
+      "url": "https://developer.nvidia.com/blog/nvidia-hopper-architecture-in-depth/",
+      "accessed": "2026-06-09"
+    }
+  ],
+  "chip": {
+    "process": "TSMC 4N",
+    "transistors": "80 billion",
+    "dieArea": "814 mm2",
+    "computeCapability": "9.0",
+    "enabledSmCount": 132,
+    "fullGpuSmCount": 144,
+    "a100EnabledSmCount": 132,
+    "notes": "The full GH100 design contains 144 SMs; the H100 SXM product exposes 132 SMs.",
+    "sourceIds": ["nvidia-h100-whitepaper", "nvidia-hopper-blog"]
+  },
+  "floorplan": {
+    "representation": "Source-backed logical hierarchy view. It preserves published GH100/H100 unit counts and hierarchy, but is not a transistor-accurate physical die mask.",
+    "fullGpcs": 8,
+    "fullTpcsPerGpc": 9,
+    "fullSmsPerTpc": 2,
+    "fullTpcsTotal": 72,
+    "activeGpcs": 8,
+    "disabledGpcs": 0,
+    "tpcsPerActiveGpc": [9, 9, 8, 8, 8, 8, 8, 8],
+    "tpcDistributionNote": "NVIDIA documents GH100 full capacity as 8 GPCs, 72 TPCs, and 144 SMs, while H100 exposes 66 TPCs and 132 SMs. This visualization uses two full 9-TPC GPCs plus six 8-TPC GPCs to preserve the published count; exact disabled-TPC physical placement is not public.",
+    "activeTpcsTotal": 66,
+    "smsPerTpc": 2,
+    "activeSmsPerGpc": [18, 18, 16, 16, 16, 16, 16, 16],
+    "activeSmsTotal": 132,
+    "fullGa100SmsTotal": 144,
+    "hbm2Stacks": 5,
+    "disabledHbm2Stacks": 1,
+    "physicalHbmSites": 6,
+    "hbmPlacement": "H100 SXM uses HBM3 device memory on the package. This view keeps the six-site package pattern as a schematic package-level map and marks five active HBM sites for the 80 GB SXM configuration.",
+    "memoryControllers": 10,
+    "memoryControllerWidth": "512-bit each",
+    "sourceIds": ["nvidia-h100-whitepaper", "nvidia-hopper-blog"]
+  },
+  "executionModel": {
+    "threadsPerWarp": 32,
+    "maxWarpsPerSm": 64,
+    "maxThreadsPerSm": 2048,
+    "maxThreadBlocksPerSm": 32,
+    "maxThreadBlockSize": 1024,
+    "maxRegistersPerSm32Bit": 65536,
+    "maxRegistersPerBlock": 65536,
+    "maxRegistersPerThread": 255,
+    "cudaConnection": "CUDA kernels launch grids of thread blocks. Blocks are scheduled onto SMs, where groups of 32 threads execute as warps and use registers, shared memory, caches, CUDA cores, and Tensor Cores.",
+    "sourceIds": ["nvidia-h100-whitepaper"]
+  },
+  "streamingMultiprocessor": {
+    "name": "H100 Streaming Multiprocessor",
+    "smPartitionsPerSm": 4,
+    "warpSchedulersPerSm": 4,
+    "fp32CudaCoresPerSm": 128,
+    "fp64CoresPerSm": 64,
+    "int32CoresPerSm": 64,
+    "textureUnitsPerSm": 4,
+    "tensorCoresPerSm": 4,
+    "l1AndSharedMemoryCapacity": "256 KB per SM combined L1 data cache and shared memory",
+    "maxConfigurableSharedMemory": "228 KB per SM",
+    "smRegisterFile": "65,536 32-bit registers per SM",
+    "importantFeatures": [
+      "Fourth-generation Tensor Cores with Transformer Engine support for FP8 and FP16 AI workloads.",
+      "Thread Block Clusters and Distributed Shared Memory add hierarchy above a single SM for cooperative kernels.",
+      "Tensor Memory Accelerator helps move multidimensional tensors between global memory and shared memory.",
+      "Asynchronous transaction barriers and improved asynchronous execution support deep-learning pipelines."
+    ],
+    "layoutNote": "Public NVIDIA material documents GH100/H100 hierarchy and per-SM unit counts, but not exact transistor-mask placement. SM internals in the visualization are hardware blocks arranged as a readable source-backed block diagram.",
+    "cudaConnection": "The SM is the main factory for CUDA execution. Occupancy depends on how many blocks, warps, registers, and shared-memory allocations can fit on each SM.",
+    "sourceIds": ["nvidia-h100-whitepaper", "nvidia-hopper-blog"]
+  },
+  "memorySystem": {
+    "deviceMemory": "80 GB HBM3 on H100 SXM",
+    "memoryBandwidth": "3.35 TB/s",
+    "l2Cache": "50 MB",
+    "l2Architecture": "Shared on-chip L2 cache with memory-path features for high-throughput data-center workloads.",
+    "cudaMemorySpaces": [
+      {
+        "name": "Global memory",
+        "physicalLocation": "HBM3 device memory",
+        "visualMetaphor": "Large off-chip device memory",
+        "performanceMeaning": "High capacity and bandwidth, but much slower than registers or shared memory; coalescing and tiling matter."
+      },
+      {
+        "name": "Shared memory",
+        "physicalLocation": "Configurable part of each SM's combined L1/shared-memory block",
+        "visualMetaphor": "Local SM scratchpad",
+        "performanceMeaning": "Fast programmer-managed storage for data reused by threads in the same block or cluster-aware pipeline."
+      },
+      {
+        "name": "Registers",
+        "physicalLocation": "Register file inside each SM",
+        "visualMetaphor": "Per-thread storage",
+        "performanceMeaning": "Fastest per-thread storage; high register use can reduce occupancy."
+      },
+      {
+        "name": "L2 cache",
+        "physicalLocation": "Shared on-chip cache between SMs and HBM3",
+        "visualMetaphor": "Shared on-chip cache",
+        "performanceMeaning": "Caches reads and writes to device memory and can reduce repeated HBM traffic."
+      }
+    ],
+    "sourceIds": ["nvidia-h100-whitepaper", "nvidia-hopper-blog"]
+  }
+}

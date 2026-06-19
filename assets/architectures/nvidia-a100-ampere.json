@@ -1,0 +1,271 @@
+{
+  "id": "nvidia-a100-ga100-ampere",
+  "name": "NVIDIA A100 Tensor Core GPU",
+  "vendor": "NVIDIA",
+  "architecture": "Ampere",
+  "gpuCodename": "GA100",
+  "releaseContext": "Data-center GPU architecture for AI, HPC, and analytics workloads.",
+  "sources": [
+    {
+      "id": "nvidia-a100-whitepaper",
+      "title": "NVIDIA A100 Tensor Core GPU Architecture Whitepaper",
+      "publisher": "NVIDIA",
+      "url": "https://www.nvidia.com/content/dam/en-zz/Solutions/Data-Center/nvidia-ampere-architecture-whitepaper.pdf",
+      "accessed": "2026-06-07"
+    },
+    {
+      "id": "nvidia-ampere-blog",
+      "title": "NVIDIA Ampere Architecture In-Depth",
+      "publisher": "NVIDIA Developer Blog",
+      "url": "https://developer.nvidia.com/blog/nvidia-ampere-architecture-in-depth/",
+      "accessed": "2026-06-07"
+    }
+  ],
+  "chip": {
+    "process": "TSMC 7 nm N7",
+    "transistors": "54.2 billion",
+    "dieArea": "826 mm2",
+    "computeCapability": "8.0",
+    "fullGpuSmCount": 128,
+    "a100EnabledSmCount": 108,
+    "notes": "The full GA100 design contains 128 SMs; the A100 product exposes 108 SMs.",
+    "sourceIds": ["nvidia-a100-whitepaper", "nvidia-ampere-blog"]
+  },
+  "floorplan": {
+    "representation": "Source-backed logical block floorplan based on NVIDIA GA100/A100 block diagrams. It preserves published unit counts and hierarchy, but is not a transistor-accurate physical die mask.",
+    "fullGpcs": 8,
+    "fullTpcsPerGpc": 8,
+    "fullSmsPerTpc": 2,
+    "fullTpcsTotal": 64,
+    "activeGpcs": 7,
+    "disabledGpcs": 1,
+    "tpcsPerActiveGpc": [8, 8, 8, 8, 8, 7, 7],
+    "tpcDistributionNote": "NVIDIA documents A100 as 7 GPCs with 7 or 8 TPCs per GPC and 108 SMs total. This visualization uses 5 full 8-TPC GPCs plus 2 partial 7-TPC GPCs to preserve the published 54 TPC / 108 SM count; exact disabled-TPC physical placement is not published.",
+    "activeTpcsTotal": 54,
+    "smsPerTpc": 2,
+    "activeSmsPerGpc": [16, 16, 16, 16, 16, 14, 14],
+    "activeSmsTotal": 108,
+    "fullGa100SmsTotal": 128,
+    "hbm2Stacks": 5,
+    "disabledHbm2Stacks": 1,
+    "physicalHbmSites": 6,
+    "hbmPlacement": "Six physical HBM sites flank the central GA100 die on the package, arranged as three sites on the left side and three sites on the right side. The A100 configuration uses five active HBM2 stacks and leaves one site disabled or unused.",
+    "memoryControllers": 10,
+    "memoryControllerWidth": "512-bit each",
+    "sourceIds": ["nvidia-a100-whitepaper", "nvidia-ampere-blog"]
+  },
+  "executionModel": {
+    "threadsPerWarp": 32,
+    "maxWarpsPerSm": 64,
+    "maxThreadsPerSm": 2048,
+    "maxThreadBlocksPerSm": 32,
+    "maxThreadBlockSize": 1024,
+    "maxRegistersPerSm32Bit": 65536,
+    "maxRegistersPerBlock": 65536,
+    "maxRegistersPerThread": 255,
+    "cudaConnection": "CUDA kernels launch grids of thread blocks. Blocks are scheduled onto SMs, where groups of 32 threads execute as warps and use registers, shared memory, caches, CUDA cores, and Tensor Cores.",
+    "sourceIds": ["nvidia-a100-whitepaper"]
+  },
+  "streamingMultiprocessor": {
+    "name": "A100 Streaming Multiprocessor",
+    "smPartitionsPerSm": 4,
+    "warpSchedulersPerSm": 4,
+    "fp32CudaCoresPerSm": 64,
+    "fp64CoresPerSm": 32,
+    "int32CoresPerSm": 64,
+    "textureUnitsPerSm": 4,
+    "tensorCoresPerSm": 4,
+    "l1AndSharedMemoryCapacity": "192 KB per SM combined L1 data cache and shared memory",
+    "maxConfigurableSharedMemory": "164 KB per SM",
+    "smRegisterFile": "65,536 32-bit registers per SM",
+    "importantFeatures": [
+      "Third-generation Tensor Cores for TF32, FP64, BF16, FP16, INT8, INT4, and binary operations.",
+      "Separate FP32 and INT32 cores allow floating-point work and integer address calculations to run at the same time.",
+      "Asynchronous copy and asynchronous barrier support help move data from global memory to shared memory with less register pressure.",
+      "Warp-level reduction instructions are supported through CUDA Cooperative Groups."
+    ],
+    "layoutNote": "Public NVIDIA material documents the GA100 SM block diagram and per-SM unit counts, but not exact transistor-mask placement. SM internals in the visualization are hardware blocks arranged as a readable source-backed block diagram.",
+    "cudaConnection": "The SM is the main factory for CUDA execution. Occupancy depends on how many blocks, warps, registers, and shared-memory allocations can fit on each SM.",
+    "sourceIds": ["nvidia-a100-whitepaper", "nvidia-ampere-blog"]
+  },
+  "memorySystem": {
+    "deviceMemory": "40 GB HBM2 on A100 SXM4",
+    "memoryBandwidth": "1555 GB/s",
+    "l2Cache": "40 MB",
+    "l2Architecture": "Partitioned crossbar with L2 residency controls and compute data compression.",
+    "cudaMemorySpaces": [
+      {
+        "name": "Global memory",
+        "physicalLocation": "HBM2 device memory",
+        "visualMetaphor": "Distant storage outside the compute city",
+        "performanceMeaning": "High capacity but much slower than registers or shared memory; coalesced access matters."
+      },
+      {
+        "name": "Shared memory",
+        "physicalLocation": "Configurable part of each SM's combined L1/shared-memory block",
+        "visualMetaphor": "Local warehouse beside an SM factory",
+        "performanceMeaning": "Fast programmer-managed storage for data reused by threads in the same block."
+      },
+      {
+        "name": "Registers",
+        "physicalLocation": "Register file inside each SM",
+        "visualMetaphor": "Tiny storage rooms beside execution lanes",
+        "performanceMeaning": "Fastest per-thread storage; high register use can reduce occupancy."
+      },
+      {
+        "name": "L2 cache",
+        "physicalLocation": "Shared on-chip cache between SMs and HBM2",
+        "visualMetaphor": "Central depot between factories and distant storage",
+        "performanceMeaning": "Caches reads and writes to device memory and can reduce repeated HBM2 traffic."
+      }
+    ],
+    "sourceIds": ["nvidia-a100-whitepaper", "nvidia-ampere-blog"]
+  },
+  "performance": {
+    "peakFp64": "9.7 TFLOPS",
+    "peakFp64TensorCore": "19.5 TFLOPS",
+    "peakFp32": "19.5 TFLOPS",
+    "peakFp16": "78 TFLOPS",
+    "peakTf32TensorCore": "156 TFLOPS dense, 312 TFLOPS with structured sparsity",
+    "peakFp16TensorCore": "312 TFLOPS dense, 624 TFLOPS with structured sparsity",
+    "peakBf16TensorCore": "312 TFLOPS dense, 624 TFLOPS with structured sparsity",
+    "peakInt8TensorCore": "624 TOPS dense, 1248 TOPS with structured sparsity",
+    "peakInt4TensorCore": "1248 TOPS dense, 2496 TOPS with structured sparsity",
+    "sourceIds": ["nvidia-a100-whitepaper", "nvidia-ampere-blog"]
+  },
+  "features": [
+    {
+      "id": "tensor-cores-3rd-gen",
+      "name": "Third-generation Tensor Cores",
+      "whatItIs": "Specialized matrix-multiply-and-accumulate units inside each SM.",
+      "whatItDoes": "Accelerates AI and HPC matrix math across TF32, FP64, BF16, FP16, INT8, INT4, and binary formats.",
+      "whyItMatters": "Many deep learning and linear algebra workloads are matrix-heavy, so Tensor Cores provide much higher throughput than scalar CUDA cores for supported operations.",
+      "visualMetaphor": "Heavy machinery inside each SM factory.",
+      "sourceIds": ["nvidia-a100-whitepaper"]
+    },
+    {
+      "id": "structured-sparsity",
+      "name": "Fine-grained structured sparsity",
+      "whatItIs": "A Tensor Core acceleration feature that skips known zero values in structured sparse matrices.",
+      "whatItDoes": "Can double Tensor Core throughput for supported sparse deep-learning operations.",
+      "whyItMatters": "Models with compatible sparsity can run faster without treating all matrix entries as useful work.",
+      "visualMetaphor": "Skipping empty cargo lanes so useful packets move twice as fast.",
+      "sourceIds": ["nvidia-a100-whitepaper", "nvidia-ampere-blog"]
+    },
+    {
+      "id": "mig",
+      "name": "Multi-Instance GPU",
+      "whatItIs": "Hardware partitioning that divides one A100 into as many as seven GPU instances.",
+      "whatItDoes": "Gives each instance isolated SM, L2 cache, memory-controller, and DRAM-path resources.",
+      "whyItMatters": "Multiple workloads can share one physical GPU with more predictable throughput and latency.",
+      "visualMetaphor": "Splitting the compute city into isolated districts with their own roads and warehouses.",
+      "sourceIds": ["nvidia-a100-whitepaper", "nvidia-ampere-blog"]
+    },
+    {
+      "id": "l2-residency-controls",
+      "name": "L2 cache residency controls",
+      "whatItIs": "Programmatic controls for keeping or evicting data in L2 cache.",
+      "whatItDoes": "Helps reused data stay closer to SMs and reduces redundant DRAM traffic.",
+      "whyItMatters": "Useful for producer-consumer patterns and repeated buffer access in training and inference workloads.",
+      "visualMetaphor": "Priority shelves in the central depot.",
+      "sourceIds": ["nvidia-a100-whitepaper"]
+    }
+  ],
+  "visualHierarchy": [
+    {
+      "level": 1,
+      "id": "gpu-die",
+      "label": "GPU die",
+      "description": "The whole GA100 chip: a large compute city built from SMs, cache, memory interfaces, interconnects, and system logic.",
+      "children": ["gpc-array", "l2-cache", "hbm2-memory"]
+    },
+    {
+      "level": 2,
+      "id": "gpc-array",
+      "label": "Graphics Processing Clusters",
+      "description": "The repeated top-level compute regions on the die. In this deep-learning view, GPCs are shown as containers for TPCs and SMs; graphics/raster units are omitted.",
+      "children": ["texture-processing-cluster"]
+    },
+    {
+      "level": 3,
+      "id": "texture-processing-cluster",
+      "label": "Texture Processing Cluster",
+      "description": "A TPC groups two SMs on GA100. For deep learning, the important path is through the SMs and Tensor Cores rather than graphics texture/raster functions.",
+      "children": ["streaming-multiprocessor"]
+    },
+    {
+      "level": 4,
+      "id": "streaming-multiprocessor",
+      "label": "Streaming Multiprocessor",
+      "description": "The factory where CUDA warps execute, with schedulers, registers, CUDA cores, Tensor Cores, shared memory, and L1 cache.",
+      "children": ["warp-schedulers", "register-file", "cuda-cores", "tensor-cores", "shared-memory-l1"]
+    },
+    {
+      "level": 5,
+      "id": "warp-schedulers",
+      "label": "Warp schedulers",
+      "description": "Traffic controllers that issue work for active warps.",
+      "children": ["cuda-cores", "tensor-cores"]
+    },
+    {
+      "level": 5,
+      "id": "register-file",
+      "label": "Register file",
+      "description": "Fast per-thread storage. Register pressure can limit occupancy by reducing how many warps fit on an SM.",
+      "children": []
+    },
+    {
+      "level": 5,
+      "id": "cuda-cores",
+      "label": "CUDA cores",
+      "description": "Scalar execution lanes for floating-point and integer work in regular CUDA instructions.",
+      "children": ["logic-gates"]
+    },
+    {
+      "level": 5,
+      "id": "tensor-cores",
+      "label": "Tensor Cores",
+      "description": "Matrix-math engines for high-throughput AI and HPC operations.",
+      "children": ["logic-gates"]
+    },
+    {
+      "level": 5,
+      "id": "shared-memory-l1",
+      "label": "Shared memory and L1",
+      "description": "A combined low-latency on-chip memory block used by CUDA shared memory and L1 data cache.",
+      "children": ["l2-cache"]
+    },
+    {
+      "level": 2,
+      "id": "l2-cache",
+      "label": "L2 cache",
+      "description": "Shared on-chip cache connecting SMs to HBM2 device memory.",
+      "children": ["hbm2-memory"]
+    },
+    {
+      "level": 2,
+      "id": "hbm2-memory",
+      "label": "HBM2 device memory",
+      "description": "High-bandwidth off-chip memory where CUDA global, local, constant, texture, and surface memory spaces ultimately reside.",
+      "children": []
+    },
+    {
+      "level": 6,
+      "id": "logic-gates",
+      "label": "Logic gates and transistors",
+      "description": "Representative low-level switching structures that implement arithmetic, control, and memory logic.",
+      "children": []
+    }
+  ],
+  "learningPath": [
+    "Start at the package: GA100 die plus HBM2 stacks.",
+    "Zoom into the die hierarchy: GPC -> TPC -> SM.",
+    "Zoom into one SM and explain that CUDA blocks are scheduled here.",
+    "Show a warp as a 32-thread execution group handled by scheduler hardware.",
+    "Route deep-learning math to CUDA cores or Tensor Cores.",
+    "Route memory through registers, shared memory/L1, L2, memory controllers, and HBM2.",
+    "Use register/shared-memory pressure to explain occupancy.",
+    "Use HBM2 and L2 paths to explain coalescing, reuse, and bandwidth.",
+    "Skip ray tracing/raster details because this visualization focuses on CUDA/Triton and deep learning."
+  ]
+}

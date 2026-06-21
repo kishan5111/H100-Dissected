@@ -138,7 +138,12 @@ export function ScrollHardwareMap({ architecture }: Props) {
               </div>
             </div>
 
-            <HardwareViewport architecture={architecture} progress={progress} />
+            <div className="hidden h-full md:block">
+              <HardwareViewport architecture={architecture} progress={progress} />
+            </div>
+            <div className="h-full md:hidden">
+              <MobileHardwareViewport architecture={architecture} progress={progress} />
+            </div>
           </div>
           <MinimalInfo architecture={architecture} activeLayer={activeLayer.id} />
         </section>
@@ -252,6 +257,227 @@ function HardwareViewport({ architecture, progress }: { architecture: Architectu
         </div>
       </div>
     </div>
+  );
+}
+
+function MobileHardwareViewport({ architecture, progress }: { architecture: ArchitectureAsset; progress: number }) {
+  const styles = layers.map((_, index) => layerInteractionStyle(progress, index, {
+    enterScale: 0.96,
+    exitScale: 1.04,
+    enterY: 2,
+    exitY: -2,
+    origin: "50% 50%"
+  }));
+
+  return (
+    <div className="absolute inset-x-0 bottom-0 top-[68px]">
+      <div className="absolute inset-0 will-change-opacity" style={styles[0]}>
+        <MobileIntro architecture={architecture} />
+      </div>
+      <div className="absolute inset-0 will-change-opacity" style={styles[1]}>
+        <MobilePackage architecture={architecture} />
+      </div>
+      <div className="absolute inset-0 will-change-opacity" style={styles[2]}>
+        <MobileComputeHierarchy architecture={architecture} />
+      </div>
+      <div className="absolute inset-0 will-change-opacity" style={styles[3]}>
+        <MobileSm architecture={architecture} />
+      </div>
+      <div className="absolute inset-0 will-change-opacity" style={styles[4]}>
+        <MobileSoftwareMapping architecture={architecture} />
+      </div>
+    </div>
+  );
+}
+
+function MobileFrame({ eyebrow, title, children }: { eyebrow: string; title: string; children: ReactNode }) {
+  return (
+    <div className="flex h-full items-center justify-center px-4 pb-5">
+      <section className="max-h-full w-full overflow-hidden border border-[#314043] bg-[#0a0f10] shadow-[0_28px_80px_rgba(0,0,0,0.6)]">
+        <header className="border-b border-[#263235] px-4 py-3">
+          <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[#7f8d89]">{eyebrow}</p>
+          <h3 className="mt-1 text-base font-semibold text-[#edf2f0]">{title}</h3>
+        </header>
+        <div className="p-3">{children}</div>
+      </section>
+    </div>
+  );
+}
+
+function MobileIntro({ architecture }: { architecture: ArchitectureAsset }) {
+  return (
+    <div className="flex h-full flex-col items-center justify-center px-6 text-center">
+      <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#899793]">{architecture.architecture} architecture</p>
+      <h1 className="mt-4 text-5xl font-semibold leading-none text-[#eef3f1]">NVIDIA H100</h1>
+      <p className="mt-4 max-w-xs text-sm leading-6 text-[#aab5b1]">Scroll to dissect the package, compute hierarchy, one SM, and the CUDA/Triton execution model.</p>
+      <div className="mt-8 grid w-full max-w-xs grid-cols-3 border-y border-[#293537] py-4">
+        <MobileMetric label="Transistors" value={architecture.chip.transistors} />
+        <MobileMetric label="Process" value={architecture.chip.process} />
+        <MobileMetric label="SMs" value={architecture.floorplan.activeSmsTotal} />
+      </div>
+    </div>
+  );
+}
+
+function MobileMetric({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="px-1 text-center">
+      <div className="font-mono text-[8px] uppercase tracking-[0.08em] text-[#74817d]">{label}</div>
+      <div className="mt-1 text-xs font-semibold text-[#e0e7e4]">{value}</div>
+    </div>
+  );
+}
+
+function MobilePackage({ architecture }: { architecture: ArchitectureAsset }) {
+  return (
+    <MobileFrame eyebrow="Layer 1 / Package" title="GH100 die with HBM3">
+      <div className="relative mx-auto aspect-square w-[min(100%,330px)] border border-[#3a4645] bg-[#151b1b] p-5">
+        <div className="grid h-full grid-cols-[52px_1fr_52px] grid-rows-3 gap-3">
+          {[0, 1, 2, 3, 4, 5].map((site) => (
+            <div
+              key={site}
+              className={`flex items-center justify-center border font-mono text-[9px] ${site === 5 ? "border-[#333a39] bg-[#202525] text-[#65706d]" : "border-[#6c7673] bg-[#444d4a] text-[#e0e5e3]"} ${site < 3 ? "col-start-1" : "col-start-3"}`}
+              style={{ gridRow: (site % 3) + 1 }}
+            >
+              {site === 5 ? "SITE" : `HBM${site + 1}`}
+            </div>
+          ))}
+          <div className="col-start-2 row-span-3 row-start-1 flex flex-col items-center justify-center border border-[#69736f] bg-[radial-gradient(circle_at_40%_32%,#65706b,#293431_58%,#111716)] px-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,.16)]">
+            <span className="font-mono text-xs font-semibold text-white">GH100</span>
+            <span className="mt-1 font-mono text-[9px] text-[#c2cbc7]">{architecture.chip.dieArea}</span>
+          </div>
+        </div>
+      </div>
+      <div className="mt-3 grid grid-cols-3 border border-[#283436] bg-[#0d1415] py-3">
+        <MobileMetric label="Memory" value="80 GB" />
+        <MobileMetric label="Type" value="HBM3" />
+        <MobileMetric label="Bandwidth" value={architecture.memorySystem.memoryBandwidth} />
+      </div>
+    </MobileFrame>
+  );
+}
+
+function MobileComputeHierarchy({ architecture }: { architecture: ArchitectureAsset }) {
+  return (
+    <MobileFrame eyebrow="Layer 2 / Physical compute" title="GPU → GPC → TPC → SM">
+      <div className="grid grid-cols-4 gap-1.5">
+        {architecture.floorplan.activeSmsPerGpc.map((sms, index) => (
+          <div key={index} className="border border-[#436064] bg-[#101d1f] p-2 text-center">
+            <div className="font-mono text-[9px] font-semibold text-[#d7e2df]">GPC {index + 1}</div>
+            <div className="mt-1 font-mono text-[8px] text-[#899995]">{sms / 2} TPC</div>
+            <div className="mt-0.5 font-mono text-[8px] text-[#b7c5c1]">{sms} SM</div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-3 grid grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-2">
+        <MobileHierarchyBox label="1 GPC" detail="8 or 9 TPC" />
+        <span className="text-[#697572]">→</span>
+        <MobileHierarchyBox label="1 TPC" detail="2 SM" />
+        <span className="text-[#697572]">→</span>
+        <MobileHierarchyBox label="1 SM" detail="execution" />
+      </div>
+      <div className="mt-3 border border-[#4a5b58] bg-[#192321] px-3 py-2">
+        <div className="flex items-center justify-between font-mono text-[9px] uppercase text-[#d9e2df]">
+          <span>Shared L2 cache</span>
+          <span>{architecture.memorySystem.l2Cache}</span>
+        </div>
+      </div>
+      <p className="mt-3 text-xs leading-5 text-[#98a5a1]">H100 exposes {architecture.floorplan.activeGpcs} GPCs, {architecture.floorplan.activeTpcsTotal} TPCs, and {architecture.floorplan.activeSmsTotal} SMs. CUDA schedules blocks to SMs, not directly to GPCs or TPCs.</p>
+    </MobileFrame>
+  );
+}
+
+function MobileHierarchyBox({ label, detail }: { label: string; detail: string }) {
+  return (
+    <div className="border border-[#334447] bg-[#0e1718] px-2 py-3 text-center">
+      <div className="font-mono text-[9px] font-semibold text-[#e0e7e4]">{label}</div>
+      <div className="mt-1 font-mono text-[8px] text-[#84918d]">{detail}</div>
+    </div>
+  );
+}
+
+function MobileSm({ architecture }: { architecture: ArchitectureAsset }) {
+  const sm = architecture.streamingMultiprocessor;
+  return (
+    <MobileFrame eyebrow="Layer 3 / One streaming multiprocessor" title="H100 SM: four scheduler partitions">
+      <div className="border border-[#4b6062] bg-[#263739] px-3 py-2 text-center font-mono text-[9px] font-semibold uppercase tracking-[0.08em] text-[#e2ece9]">
+        SM-wide L1 instruction cache
+      </div>
+      <div className="mt-2 grid grid-cols-2 gap-2">
+        {Array.from({ length: sm.smPartitionsPerSm }).map((_, index) => (
+          <div key={index} className="border border-[#314548] bg-[#0d1617] p-2">
+            <div className="flex items-center justify-between font-mono text-[8px] uppercase text-[#8f9c98]">
+              <span>Partition {index + 1}</span>
+              <span>1 scheduler</span>
+            </div>
+            <div className="mt-2 border border-[#7b6134] bg-[#362612] px-2 py-1.5 text-center font-mono text-[8px] font-semibold text-[#f3e5cd]">Warp scheduler + dispatch</div>
+            <div className="mt-1.5 border border-[#356064] bg-[#17383b] px-2 py-1.5 text-center font-mono text-[8px] text-[#dceae7]">Register file: 16,384 × 32-bit</div>
+            <div className="mt-1.5 grid grid-cols-2 gap-1">
+              <MobileUnit label="32 FP32" tone="fp" />
+              <MobileUnit label="16 INT32" tone="int" />
+              <MobileUnit label="16 FP64" tone="fp64" />
+              <MobileUnit label="1 Tensor" tone="tensor" />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-2 border border-[#4d625b] bg-[#263a34] px-3 py-2 text-center font-mono text-[9px] font-semibold uppercase text-[#e1e9e5]">
+        256 KB combined L1 data cache / shared memory
+      </div>
+      <p className="mt-2 text-[11px] leading-4 text-[#8f9c98]">Per SM: {sm.fp32CudaCoresPerSm} FP32, {sm.int32CoresPerSm} INT32, {sm.fp64CoresPerSm} FP64 and {sm.tensorCoresPerSm} Tensor Cores.</p>
+    </MobileFrame>
+  );
+}
+
+function MobileUnit({ label, tone }: { label: string; tone: "fp" | "int" | "fp64" | "tensor" }) {
+  const toneClass = {
+    fp: "border-[#5c6637] bg-[#32391d]",
+    int: "border-[#4a604e] bg-[#263529]",
+    fp64: "border-[#665d3d] bg-[#38321f]",
+    tensor: "border-[#766a3b] bg-[#40391f]"
+  }[tone];
+  return <div className={`border px-1 py-2 text-center font-mono text-[8px] text-[#e0e6e2] ${toneClass}`}>{label}</div>;
+}
+
+function MobileSoftwareMapping({ architecture }: { architecture: ArchitectureAsset }) {
+  const steps = [
+    ["PyTorch", "z = x + y", "launches or compiles a GPU kernel"],
+    ["Grid", "many programs / blocks", `distributed across ${architecture.floorplan.activeSmsTotal} SMs`],
+    ["Program / block", "one data tile", "resides on one SM"],
+    ["Warp", "32 CUDA threads", "issued by a warp scheduler"],
+    ["Thread / lane", "load → add → store", "uses registers and execution lanes"]
+  ];
+
+  return (
+    <MobileFrame eyebrow="Layer 4 / Programming model" title="Software → hardware mapping">
+      <div className="space-y-1.5">
+        {steps.map(([label, software, hardware], index) => (
+          <div key={label}>
+            <div className="grid grid-cols-[0.8fr_1fr] gap-2 border border-[#324447] bg-[#0f191a] p-2.5">
+              <div>
+                <div className="font-mono text-[9px] font-semibold uppercase text-[#dbe4e1]">{label}</div>
+                <div className="mt-1 font-mono text-[8px] text-[#8d9a96]">{software}</div>
+              </div>
+              <div className="border-l border-[#344345] pl-2 font-mono text-[8px] leading-4 text-[#b9c4c0]">{hardware}</div>
+            </div>
+            {index < steps.length - 1 ? <div className="mx-auto h-2 w-px bg-[#596663]" /> : null}
+          </div>
+        ))}
+      </div>
+      <div className="mt-3 grid grid-cols-4 gap-1">
+        {[
+          ["Registers", "thread"],
+          ["Shared/L1", "SM"],
+          ["L2", "GPU"],
+          ["HBM3", "device"]
+        ].map(([label, scope]) => (
+          <div key={label} className="border border-[#3b4d4e] bg-[#151e1e] px-1 py-2 text-center">
+            <div className="font-mono text-[8px] font-semibold text-[#dce4e1]">{label}</div>
+            <div className="mt-1 font-mono text-[7px] uppercase text-[#788682]">{scope}</div>
+          </div>
+        ))}
+      </div>
+    </MobileFrame>
   );
 }
 
@@ -1013,7 +1239,7 @@ function MinimalInfo({ architecture, activeLayer }: { architecture: Architecture
 
   return (
     <aside
-      className={`absolute bottom-4 right-4 z-20 w-[min(390px,calc(100vw-32px))] border border-[#253032] bg-[#080a0a]/78 backdrop-blur transition-opacity duration-300 ${compact ? "p-3 text-sm" : "p-4"}`}
+      className={`absolute bottom-4 right-4 z-20 hidden w-[min(390px,calc(100vw-32px))] border border-[#253032] bg-[#080a0a]/78 backdrop-blur transition-opacity duration-300 md:block ${compact ? "p-3 text-sm" : "p-4"}`}
       style={{ opacity: hidden ? 0 : 1, pointerEvents: hidden ? "none" : "auto" }}
     >
       <div className="flex items-start justify-between gap-4">
